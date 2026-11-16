@@ -1,4 +1,6 @@
 import logging
+import threading
+from flask import Flask
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from config import BOT_TOKEN
 import database as db
@@ -8,6 +10,14 @@ from handlers import admin as admin_h, ideas as ideas_h, stats as stats_h
 from services.scheduler import schedule_jobs
 
 logging.basicConfig(level=logging.INFO)
+
+app_web = Flask(__name__)
+@app_web.route('/')
+def health_check():
+    return "Bot is alive!", 200
+
+def run_web():
+    app_web.run(host='0.0.0.0', port=8080)
 
 def main():
     db.init_db(); db.bootstrap_admins()
@@ -23,7 +33,6 @@ def main():
     app.add_handler(CommandHandler("start", start_h.start))
     admin_h.register(app)
 
-    # أزرار الموافقة والرفض للأفكار
     app.add_handler(CallbackQueryHandler(ideas_h.approve_idea, pattern="^idea:approve:"))
     app.add_handler(CallbackQueryHandler(ideas_h.reject_idea, pattern="^idea:reject:"))
 
@@ -59,7 +68,10 @@ def main():
     app.add_handler(CallbackQueryHandler(stats_h.stats_activity_view, pattern="^stats:activity$"))
 
     schedule_jobs(app)
-    print("🚀 ASTRONOVA BOT is starting...")
+    
+    threading.Thread(target=run_web, daemon=True).start()
+    
+    print("🚀 ASTRONOVA BOT is starting on Render...")
     app.run_polling(allowed_updates=["message", "callback_query"])
 
 if __name__ == "__main__":
