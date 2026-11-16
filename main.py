@@ -1,3 +1,4 @@
+import os
 import logging
 import threading
 from flask import Flask
@@ -17,7 +18,9 @@ def health_check():
     return "Bot is alive!", 200
 
 def run_web():
-    app_web.run(host='0.0.0.0', port=8080)
+    # Render يحدد المنفذ تلقائياً عبر متغير البيئة PORT
+    port = int(os.environ.get("PORT", 8080))
+    app_web.run(host='0.0.0.0', port=port)
 
 def main():
     db.init_db(); db.bootstrap_admins()
