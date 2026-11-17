@@ -157,3 +157,7 @@ def list_announcements(category=None, limit=10):
 def list_pending_scheduled():
     with get_conn() as c:
         return c.execute("SELECT * FROM announcements WHERE status='scheduled'").fetchall()
+        
+def get_new_members(limit=15):
+    with get_conn() as c:
+        return c.execute("SELECT * FROM members ORDER BY joined_at DESC LIMIT ?", (limit,)).fetchall()
