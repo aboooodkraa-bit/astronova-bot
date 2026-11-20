@@ -75,6 +75,11 @@ QUIZ_BANK = [
     {"q": "ما هو أفضل مكان للاجتماع؟", "options": ["قاعة الأساتذة", "مقر النادي", "بيرو سهام"], "a": "بيرو سهام"},
 ]
 
+# دالة فتح قائمة الألعاب (المطلوبة من قبل main.py لكي لا يحدث خطأ)
+async def show_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # نبدأ لعبة الأسئلة مباشرة عند الضغط على الزر
+    await start_quiz(update, context)
+
 # دالة لبدء الأسئلة
 async def start_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # نختار 5 أسئلة عشوائية لكل جولة
@@ -92,10 +97,11 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if index >= len(questions):
         # انتهت الأسئلة
         score = context.user_data["quiz_score"]
-        await update.callback_query.message.edit_text(
-            f"🏁 <b>انتهت الجولة!</b>\n\nنتيجتك: {score} من {len(questions)}\n\nأحسنت! 🎉",
-            parse_mode="HTML"
-        )
+        text = f"🏁 <b>انتهت الجولة!</b>\n\nنتيجتك: {score} من {len(questions)}\n\nأحسنت! 🎉"
+        if update.callback_query:
+            await update.callback_query.message.edit_text(text, parse_mode="HTML")
+        else:
+            await update.message.reply_text(text, parse_mode="HTML")
         return
 
     q = questions[index]
@@ -130,7 +136,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         feedback = f"❌ <b>إجابة خاطئة.</b> الصواب: {q['a']}"
     
-    await query.message.edit_text(feedback)
+    await query.message.edit_text(feedback, parse_mode="HTML")
     
     context.user_data["quiz_index"] += 1
     await send_question(update, context)
