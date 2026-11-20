@@ -5,6 +5,9 @@ from database import is_admin, list_admins, add_admin, remove_admin, log_admin, 
 from keyboards.admin_menu import admin_menu_kb
 from config import DB_PATH
 
+# 🌟 استدعاء دالة الرابط السحري من ملف joining.py
+from handlers.joining import send_invite_link
+
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.effective_user.id): return await update.message.reply_text("🚫 غير مصرّح.")
     await update.message.reply_text("🛡️ *لوحة التحكم الإدارية*\n\nمرحباً بك. اختر القسم:", reply_markup=admin_menu_kb(), parse_mode="Markdown")
@@ -24,14 +27,19 @@ async def backup_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await q.edit_message_text(f"⚠️ حدث خطأ: {e}")
 
+# ✅ هذه هي الدالة التي تم تعديلها
 async def jr_approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query; await q.answer()
     if not is_admin(update.effective_user.id): return
     tid = approve_join(int(q.data.split(":")[2]))
     if tid:
-        try: await context.bot.send_message(tid, "🎉 تم قبول انضمامك لنادي أسترونوفا!")
-        except: pass
-    await q.edit_message_text("✅ تم القبول.")
+        # استدعاء دالة إرسال الرابط السحري بدلاً من الرسالة العادية
+        success = await send_invite_link(context, tid)
+        if not success:
+            # في حال فشل إرسال الرابط (مثلاً البوت ليس مشرفاً)، نرسل رسالة بديلة
+            try: await context.bot.send_message(tid, "🎉 تم قبول انضمامك لنادي أسترونوفا! (يرجى التواصل مع الإدارة للحصول على رابط المجموعة)")
+            except: pass
+    await q.edit_message_text("✅ تم القبول وإرسال رابط الدعوة.")
 
 async def jr_reject(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query; await q.answer()
