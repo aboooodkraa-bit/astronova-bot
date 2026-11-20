@@ -16,3 +16,6 @@ def level_for(points: int) -> str:
     for threshold, name in LEVELS:
         if points >= threshold: lvl = name
     return lvl
+
+# 🌟 الآي دي الخاص بالمجموعة (الذي أرسلته)
+GROUP_CHAT_ID = -1004411507445
