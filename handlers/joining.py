@@ -1,3 +1,4 @@
+import config
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 from database import create_join_request
@@ -79,3 +80,22 @@ def get_conv_handler():
         states={J_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_name)],J_SPECIALTY: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_specialty)],J_LEVEL: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_level)],J_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_username)],J_REASON: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_reason)],J_SKILLS: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_skills)],J_CONFIRM: [CallbackQueryHandler(confirm_join, pattern="^join:confirm$"), CallbackQueryHandler(cancel_join, pattern="^join:cancel$")],},
         fallbacks=[CallbackQueryHandler(cancel_join, pattern="^menu:main$")],
     )
+
+# ==========================================
+# 🌟 دالة جديدة لإرسال رابط الدعوة السحري
+# ==========================================
+async def send_invite_link(context: ContextTypes.DEFAULT_TYPE, user_id: int):
+    try:
+        invite_link = await context.bot.create_chat_invite_link(
+            chat_id=config.GROUP_CHAT_ID,
+            member_limit=1,
+            expire_date=None
+        )
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=f"🎉 مبروك القبول في نادي أسترونوفا!\n\n🔗 تفضل رابط الدخول لمجموعة النادي (هذا الرابط صالح لك وحدك ولن يعمل مع غيرك):\n{invite_link.invite_link}"
+        )
+        return True
+    except Exception as e:
+        print(f"Error creating invite link: {e}")
+        return False
