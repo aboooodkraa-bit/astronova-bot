@@ -39,8 +39,7 @@ def main():
 
     # Games Handlers
     app.add_handler(CallbackQueryHandler(games_h.show_games, pattern="^menu:games$"))
-    app.add_handler(CallbackQueryHandler(games_h.start_game, pattern="^game:start$"))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, games_h.handle_answer))
+    app.add_handler(CallbackQueryHandler(games_h.handle_answer, pattern="^qans:"))
 
     # Members Handlers
     app.add_handler(CallbackQueryHandler(members_h.show_members, pattern="^menu:members$"))
