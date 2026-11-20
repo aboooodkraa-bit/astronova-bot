@@ -62,7 +62,7 @@ QUIZ_BANK = [
     {"q": "من هو الملك الموكل بالوحي؟", "options": ["جبريل", "ميكائيل", "إسرافيل", "مالك"], "a": "جبريل"},
     {"q": "ما هي القبلة الأولى للمسلمين؟", "options": ["الكعبة", "المسجد النبوي", "المسجد الأقصى", "مسجد قباء"], "a": "المسجد الأقصى"},
 
-    # ---------------- أسئلة فكاهية وخاصة (أسترونوفا والملحقة) ----------------
+    # ---------------- أسئلة فكاهية وخاصة ----------------
     {"q": "من هو زروقي؟", "options": ["لاعب المنتخب", "مدير الملحقة", "أستاذ رياضيات", "طالب"], "a": "لاعب المنتخب"},
     {"q": "متى تأسست ملحقة بسكرة؟", "options": ["2025", "1990", "2000", "2010"], "a": "2025"},
     {"q": "متى تأسست خيضر؟", "options": ["1984", "1990", "معرفش 😂😂", "2000"], "a": "معرفش 😂😂"},
@@ -75,14 +75,14 @@ QUIZ_BANK = [
     {"q": "ما هو أفضل مكان للاجتماع؟", "options": ["قاعة الأساتذة", "مقر النادي", "بيرو سهام"], "a": "بيرو سهام"},
 ]
 
-# دالة فتح قائمة الألعاب (المطلوبة من قبل main.py لكي لا يحدث خطأ)
+# دالة فتح قائمة الألعاب (المطلوبة من قبل main.py)
 async def show_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # نبدأ لعبة الأسئلة مباشرة عند الضغط على الزر
+    query = update.callback_query
+    await query.answer()
     await start_quiz(update, context)
 
 # دالة لبدء الأسئلة
 async def start_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # نختار 5 أسئلة عشوائية لكل جولة
     questions = random.sample(QUIZ_BANK, 5)
     context.user_data["quiz_questions"] = questions
     context.user_data["quiz_index"] = 0
@@ -95,7 +95,6 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     questions = context.user_data["quiz_questions"]
     
     if index >= len(questions):
-        # انتهت الأسئلة
         score = context.user_data["quiz_score"]
         text = f"🏁 <b>انتهت الجولة!</b>\n\nنتيجتك: {score} من {len(questions)}\n\nأحسنت! 🎉"
         if update.callback_query:
@@ -105,14 +104,11 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     q = questions[index]
-    
-    # تجهيز الأزرار
     keyboard = []
     for opt in q["options"]:
         keyboard.append([InlineKeyboardButton(opt, callback_data=f"qans:{opt}")])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
     text = f"🧠 <b>السؤال {index + 1} من {len(questions)}:</b>\n\n{q['q']}"
     
     if update.callback_query:
@@ -120,23 +116,23 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="HTML")
 
-# دالة استقبال الإجابة
+# دالة استقبال الإجابة من الأزرار (تمت إضافتها لحل المشكلة)
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
     chosen = query.data.split(":")[1]
-    index = context.user_data["quiz_index"]
-    questions = context.user_data["quiz_questions"]
-    q = questions[index]
+    index = context.user_data.get("quiz_index", 0)
+    questions = context.user_data.get("quiz_questions", [])
     
-    if chosen == q["a"]:
-        context.user_data["quiz_score"] += 1
-        feedback = "✅ <b>إجابة صحيحة!</b>"
-    else:
-        feedback = f"❌ <b>إجابة خاطئة.</b> الصواب: {q['a']}"
-    
-    await query.message.edit_text(feedback, parse_mode="HTML")
-    
-    context.user_data["quiz_index"] += 1
-    await send_question(update, context)
+    if index < len(questions):
+        q = questions[index]
+        if chosen == q["a"]:
+            context.user_data["quiz_score"] += 1
+            feedback = "✅ <b>إجابة صحيحة!</b>"
+        else:
+            feedback = f"❌ <b>إجابة خاطئة.</b> الصواب: {q['a']}"
+        
+        await query.message.edit_text(feedback, parse_mode="HTML")
+        context.user_data["quiz_index"] += 1
+        await send_question(update, context)
