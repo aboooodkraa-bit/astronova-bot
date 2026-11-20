@@ -10,6 +10,7 @@ def main_menu_kb():
         [InlineKeyboardButton("🎮 ألعاب تفاعلية", callback_data="menu:games")],
         [InlineKeyboardButton("💡 صندوق الأفكار", callback_data="menu:ideas")],
         [InlineKeyboardButton("📩 التواصل مع الإدارة", callback_data="menu:contact")],
+        [InlineKeyboardButton("📸 إنستغرام النادي", url="https://www.instagram.com/astronova_club_")],
     ])
 
 def back_kb():
